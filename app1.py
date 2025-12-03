@@ -1,34 +1,31 @@
 import streamlit as st
 import numpy as np
-import pickle
+from sklearn.datasets import load_iris
+from sklearn.tree import DecisionTreeClassifier
 
-# ---------------------------
-# Load the saved model
-# ---------------------------
 @st.cache_resource
-def load_model():
-    with open("iris_dt.pkl", "rb") as f:    # iris_dt.pkl must be in same folder as app.py
-        model = pickle.load(f)
-    return model
+def train_model():
+    iris = load_iris(as_frame=True)
+    X = iris.data
+    y = iris.target
 
-model = load_model()
+    model = DecisionTreeClassifier()
+    model.fit(X, y)
 
-# ---------------------------
-# Streamlit UI
-# ---------------------------
+    return model, iris.feature_names, iris.target_names
+
+model, feature_names, target_names = train_model()
+
 st.title("Iris Flower Classifier (Decision Tree)")
 
 st.write("Enter flower measurements to predict the Iris species.")
 
-# These names must match the order of columns used during training
-sepal_length = st.number_input("Sepal length (cm)",  min_value=0.0, max_value=10.0, value=5.1)
-sepal_width  = st.number_input("Sepal width (cm)",   min_value=0.0, max_value=10.0, value=3.5)
-petal_length = st.number_input("Petal length (cm)",  min_value=0.0, max_value=10.0, value=1.4)
-petal_width  = st.number_input("Petal width (cm)",   min_value=0.0, max_value=10.0, value=0.2)
+sepal_length = st.number_input("Sepal length (cm)",  0.0, 10.0, 5.1)
+sepal_width  = st.number_input("Sepal width (cm)",   0.0, 10.0, 3.5)
+petal_length = st.number_input("Petal length (cm)",  0.0, 10.0, 1.4)
+petal_width  = st.number_input("Petal width (cm)",   0.0, 10.0, 0.2)
 
-if st.button("Predict Species"):
-    # Make a 2D array as model expects: [[f1, f2, f3, f4]]
-    input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
-    prediction = model.predict(input_data)[0]
-
-    st.success(f"Predicted species: **{prediction}**")
+if st.button("Predict"):
+    x = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+    pred_idx = model.predict(x)[0]
+    st.success(f"Predicted species: {target_names[pred_idx]}")
